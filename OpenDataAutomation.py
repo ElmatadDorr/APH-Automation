@@ -49,7 +49,7 @@ def main(args):
         # Post the file to SCGC?
         if args.Upload == True:
             # Authenticate to the portal
-            auth = Authorization('austin-aph.data.socrata.com', 'aphscgc@gmail.com', '2b4u2D@y')
+            auth = Authorization('austin-aph.data.socrata.com', 'Your_Socrata_Username', 'Your_Socrata_Password')
             socrata = Socrata(auth)
             # Find the view for the dataset
             (ok, view) = socrata.views.lookup(ods.view)
