@@ -7,8 +7,12 @@ import urllib
 import googlemaps
 import pandas as pd
 import time
+from socrata.authorization import Authorization
+from socrata import Socrata
+import sys
 import os
 import Combine_Data_for_EVI
+import webbrowser
 from math import radians, cos, sin, asin, sqrt
 from haversine import haversine
 
@@ -100,7 +104,6 @@ inven['Address'] = inven['Street Address'].apply(geolocator.geocode)
 #Sleep to ensure the API is not overburdened
 #time.sleep(1)
 
-inven.pop('Street Address')
 inven.pop('Unnamed: 0')
 
 #Extra code for printing out possible locations that need it,
@@ -115,3 +118,24 @@ inven.pop('Unnamed: 0')
 print('')
 inven.to_excel("Recommended Locations for " + vacc.lower() + ".xlsx")
 print('Success! Check for a file named Recommended Locations for ' + vacc.lower() + '.xlsx in the same directory as this program')
+auth = Authorization(
+    'austin-aph.data.socrata.com',
+    os.environ['MY_SOCRATA_USERNAME'],
+    os.environ['MY_SOCRATA_PASSWORD']
+)
+
+socrata = Socrata(auth)
+
+(ok, view) = socrata.views.lookup('iy7u-7emm')
+assert ok, view
+
+with open("Recommended Locations for " + vacc.lower() + ".xlsx", 'rb') as my_file:
+    (ok, job) = socrata.using_config('Recommended Locations for ipol (ipv) 49281086010p_08-05-2019_de4b', view).xlsx(my_file)
+    assert ok, job
+    # These next 3 lines are optional - once the job is started from the previous line, the
+    # script can exit; these next lines just block until the job completes
+    assert ok, job
+    (ok, job) = job.wait_for_finish(progress = lambda job: print('Job progress:', job.attributes['status']))
+
+webbrowser.open('https://austin-aph.data.socrata.com/dataset/Reducing-Vaccine-Waste-Project/iy7u-7emm', new = 2)
+webbrowser.open('https://austin-aph.data.socrata.com/dataset/Recommended-Locations/t59f-nt5t', new = 2)
